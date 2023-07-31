@@ -1,3 +1,5 @@
+library(Dict)
+
 #function for turning gene mutations on/off
 
 #combine the table 7 rows into columns, so one column is equal to one patient 
@@ -37,7 +39,7 @@ genes <- Dict$new(
   .class = "character",
   .overwrite = TRUE)
 
-#genes["FLT3"]= time.series[j,col] <- 1
+#genes["FLT3"]= "time.series[j,col] <- 1"
 
 #read the mutation profile
 geneswitch <- function(mutation_profile) {
