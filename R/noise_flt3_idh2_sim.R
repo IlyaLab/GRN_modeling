@@ -212,6 +212,5 @@ hist(time.series[0:n.obs,28],
      xlab = "Network score"
 ) # plot the distribution of score_vector
 
-plot(seq(1,20000), time.series[1:n.obs,28], xlab = "time points", ylab = "Network score")
 plot(seq(1,n.obs), time.series[1:n.obs,28], xlab = "time points", ylab = "Network score")
 
