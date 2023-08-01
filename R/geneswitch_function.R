@@ -1,14 +1,15 @@
 library(Dict)
+library(dplyr)
 
 #function for turning gene mutations on/off
 
 #combine the table 7 rows into columns, so one column is equal to one patient 
-#patient_profile_df <- s7_df %>%
-#dplyr::group_by(labId) %>%
-#dplyr::summarise(symbol = paste(symbol, collapse = ","))
+patient_profile_df <- s7_df %>%
+dplyr::group_by(labId) %>%
+dplyr::summarise(symbol = paste(symbol, collapse = ","))
 
 #FOR NOW IM MAKING A TEST DATAFRAME
-#patient_profile_test_df <- patient_profile_df[1:5, ]
+patient_profile_test_df <- patient_profile_df[1:5, ]
 
 #create the dictonary
 genes <- Dict$new(  
@@ -39,7 +40,7 @@ genes <- Dict$new(
   .class = "character",
   .overwrite = TRUE)
 
-#genes["FLT3"]= "time.series[j,col] <- 1"
+#genes["FLT3"]= time.series[j,col] <- 1
 
 #read the mutation profile
 geneswitch <- function(mutation_profile) {
@@ -67,8 +68,8 @@ geneswitch <- function(mutation_profile) {
 
 #how the function will be used -> can execute
 #read a row from table
-#for (i in 1:nrow(patient_profile_test_df)){
-#patient_id <- patient_profile_test_df[i, "labId"]          #stores the labID as a patient_id variable for each row
-#mutation_profile <- as.vector(patient_profile_test_df$symbol[i]) #stores the mutations as a mutation_profile variable for each row
+for (i in 1:nrow(patient_profile_test_df)){
+patient_id <- patient_profile_test_df[i, "labId"]          #stores the labID as a patient_id variable for each row
+mutation_profile <- as.vector(patient_profile_test_df$symbol[i]) #stores the mutations as a mutation_profile variable for each row
 
-#cat(geneswitch(mutation_profile))}
+cat(geneswitch(mutation_profile))}
