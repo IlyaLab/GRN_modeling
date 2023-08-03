@@ -5,6 +5,18 @@ library(dplyr)
 library(zoo)
 library(Dict)
 library(ggplot2)
+library(readxl)
+
+#importing the excel sheet called s7_table
+s7_df <- read_excel("INSERT PATH TO FILE/s7_table.xlsx")
+
+#combine the table 7 rows into columns, so one row is equal to one patient 
+patient_profile_df <- s7_df %>%
+  dplyr::group_by(labId) %>%
+  dplyr::summarise(symbol = paste(symbol, collapse = ","))
+
+#FOR NOW IM MAKING A TEST DATAFRAME
+patient_profile_test_df <- patient_profile_df[1:5, ]
 
 #create the dictonary
 genes <- Dict$new(  
@@ -60,50 +72,19 @@ geneswitch <- function(mutation_profile) {
     cat(genes[p], sep="\n")
   }}
 
-
-#combine the table 7 rows into columns, so one row is equal to one patient 
-patient_profile_df <- s7_df %>%
-  dplyr::group_by(labId) %>%
-  dplyr::summarise(symbol = paste(symbol, collapse = ","))
-
-#FOR NOW IM MAKING A TEST DATAFRAME
-patient_profile_test_df <- patient_profile_df[1:5, ]
-
-
 ############# making the time series #############
 
 n.obs <- 40500 # number of observation aka steps 
 n.half <- (n.obs/2) #half the steps (for plot making)
 p <- 24 # number of variables
 
-# randomly generated number from 0 to 1 (uniformly distributed) for each time-step, so if we have a probability for flipping the node, 
-#we can compare this random number with the probablity, e.g., .2, and when the random number is less than .2, we will flip the node. 
-#need to definately fix this part
-zeta <- cbind(runif(n.obs,0, 1), #1
-              runif(n.obs,0, 1), #2
-              runif(n.obs,0, 1), #3
-              runif(n.obs,0, 1), #4
-              runif(n.obs,0, 1), #5
-              runif(n.obs,0, 1), #6
-              runif(n.obs,0, 1), #7
-              runif(n.obs,0, 1), #8
-              runif(n.obs,0, 1), #9 
-              runif(n.obs,0, 1), #10
-              runif(n.obs,0, 1), #11
-              runif(n.obs,0, 1), #12
-              runif(n.obs,0, 1), #13
-              runif(n.obs,0, 1), #14
-              runif(n.obs,0, 1), #15
-              runif(n.obs,0, 1), #16
-              runif(n.obs,0, 1), #17
-              runif(n.obs,0, 1), #18
-              runif(n.obs,0, 1), #19
-              runif(n.obs,0, 1), #20
-              runif(n.obs,0, 1), #21
-              runif(n.obs,0, 1), #22
-              runif(n.obs,0, 1), #23
-              runif(n.obs,0, 1)) #24
+# randomly generated number from 0 to 1 (uniformly distributed) for each time-step
+#so if we have a probability for flipping the node, 
+#we can compare this random number with the probablity, e.g., .2, 
+#and when the random number is less than .2, we will flip the node. 
+
 # 24 time-series of noise for 24 variables
+zeta <- matrix(runif(n.obs * p, 0, 1), ncol = p)
 
 zeta <- t(zeta) # adjust zeta to a wide-format
 
@@ -143,79 +124,80 @@ for (col in 2:n.obs){
     time.series[23,col] <-!time.series[22,col-1] & time.series[13,col-1]		#BCL2 = !TP53 & ERK
     time.series[24,col] <-time.series[1,col-1] 								            	#PTPN11 = FLT3
   
-  # add noise, if the random number in zeta is less than .2, then flip the node by applying  the NOT
-  time.series[1,col] <- ifelse(zeta[1,col] < chance.to.flip, 
-                               !time.series[1,col],
-                               time.series[1,col] )
-  time.series[2,col] <- ifelse(zeta[2,col] < chance.to.flip, 
-                               !time.series[2,col],
-                               time.series[2,col] )
-  time.series[3,col] <- ifelse(zeta[3,col] < chance.to.flip, 
-                               !time.series[3,col],
-                               time.series[3,col])
-  time.series[4,col] <- ifelse(zeta[4,col] < chance.to.flip, 
-                               !time.series[4,col],
-                               time.series[,col] )
-  time.series[5,col] <- ifelse(zeta[5,col] < chance.to.flip, 
-                               !time.series[5,col],
-                               time.series[5,col] )
-  time.series[6,col] <- ifelse(zeta[6,col] < chance.to.flip, 
-                               !time.series[6,col],
-                               time.series[6,col])
-  time.series[7,col] <- ifelse(zeta[7,col] < chance.to.flip, 
-                               !time.series[7,col],
-                               time.series[7,col] )
-  time.series[8,col] <- ifelse(zeta[8,col] < chance.to.flip, 
-                               !time.series[8,col],
-                               time.series[8,col] )
-  time.series[9,col] <- ifelse(zeta[9,col] < chance.to.flip, 
-                               !time.series[9,col],
-                               time.series[9,col])
-  time.series[10,col] <- ifelse(zeta[10,col] < chance.to.flip, 
-                                !time.series[10,col],
-                                time.series[10,col])
-  time.series[11,col] <- ifelse(zeta[11,col] < chance.to.flip, 
-                                !time.series[11,col],
-                                time.series[11,col])
-  time.series[12,col] <- ifelse(zeta[12,col] < chance.to.flip, 
-                                !time.series[12,col],
-                                time.series[12,col])
-  time.series[13,col] <- ifelse(zeta[13,col] < chance.to.flip, 
-                                !time.series[13,col],
-                                time.series[13,col])
-  time.series[14,col] <- ifelse(zeta[14,col] < chance.to.flip, 
-                                !time.series[14,col],
-                                time.series[14,col])
-  time.series[15,col] <- ifelse(zeta[15,col] < chance.to.flip, 
-                                !time.series[15,col],
-                                time.series[15,col])
-  time.series[16,col] <- ifelse(zeta[16,col] < chance.to.flip, 
-                                !time.series[16,col],
-                                time.series[16,col])
-  time.series[17,col] <- ifelse(zeta[17,col] < chance.to.flip, 
-                                !time.series[17,col],
-                                time.series[17,col])
-  time.series[18,col] <- ifelse(zeta[18,col] < chance.to.flip, 
-                                !time.series[18,col],
-                                time.series[18,col])
-  time.series[19,col] <- ifelse(zeta[19,col] < chance.to.flip, 
-                                !time.series[19,col],
-                                time.series[19,col])
-  time.series[20,col] <- ifelse(zeta[20,col] < chance.to.flip, 
-                                !time.series[20,col],
-                                time.series[20,col])
-  time.series[21,col] <- ifelse(zeta[21,col] < chance.to.flip, 
-                                !time.series[21,col],
-                                time.series[21,col])
-  time.series[22,col] <- ifelse(zeta[22,col] < chance.to.flip, 
-                                !time.series[22,col],
-                                time.series[22,col])
-  time.series[23,col] <- ifelse(zeta[23,col] < chance.to.flip, 
-                                !time.series[23,col],
-                                time.series[23,col])
-  time.series[24,col] <- ifelse(zeta[24,col] < chance.to.flip, 
-                                !time.series[24,col],
-                                time.series[24,col])
+# add noise, if the random number in zeta is less than .2, then flip the node by applying  the NOT
+
+    time.series[1,col] <- ifelse(zeta[1,col] < chance.to.flip, 
+                                 !time.series[1,col],
+                                 time.series[1,col] )
+    time.series[2,col] <- ifelse(zeta[2,col] < chance.to.flip, 
+                                 !time.series[2,col],
+                                 time.series[2,col] )
+    time.series[3,col] <- ifelse(zeta[3,col] < chance.to.flip, 
+                                 !time.series[3,col],
+                                 time.series[3,col])
+    time.series[4,col] <- ifelse(zeta[4,col] < chance.to.flip, 
+                                 !time.series[4,col],
+                                 time.series[,col] )
+    time.series[5,col] <- ifelse(zeta[5,col] < chance.to.flip, 
+                                 !time.series[5,col],
+                                 time.series[5,col] )
+    time.series[6,col] <- ifelse(zeta[6,col] < chance.to.flip, 
+                                 !time.series[6,col],
+                                 time.series[6,col])
+    time.series[7,col] <- ifelse(zeta[7,col] < chance.to.flip, 
+                                 !time.series[7,col],
+                                 time.series[7,col] )
+    time.series[8,col] <- ifelse(zeta[8,col] < chance.to.flip, 
+                                 !time.series[8,col],
+                                 time.series[8,col] )
+    time.series[9,col] <- ifelse(zeta[9,col] < chance.to.flip, 
+                                 !time.series[9,col],
+                                 time.series[9,col])
+    time.series[10,col] <- ifelse(zeta[10,col] < chance.to.flip, 
+                                  !time.series[10,col],
+                                  time.series[10,col])
+    time.series[11,col] <- ifelse(zeta[11,col] < chance.to.flip, 
+                                  !time.series[11,col],
+                                  time.series[11,col])
+    time.series[12,col] <- ifelse(zeta[12,col] < chance.to.flip, 
+                                  !time.series[12,col],
+                                  time.series[12,col])
+    time.series[13,col] <- ifelse(zeta[13,col] < chance.to.flip, 
+                                  !time.series[13,col],
+                                  time.series[13,col])
+    time.series[14,col] <- ifelse(zeta[14,col] < chance.to.flip, 
+                                  !time.series[14,col],
+                                  time.series[14,col])
+    time.series[15,col] <- ifelse(zeta[15,col] < chance.to.flip, 
+                                  !time.series[15,col],
+                                  time.series[15,col])
+    time.series[16,col] <- ifelse(zeta[16,col] < chance.to.flip, 
+                                  !time.series[16,col],
+                                  time.series[16,col])
+    time.series[17,col] <- ifelse(zeta[17,col] < chance.to.flip, 
+                                  !time.series[17,col],
+                                  time.series[17,col])
+    time.series[18,col] <- ifelse(zeta[18,col] < chance.to.flip, 
+                                  !time.series[18,col],
+                                  time.series[18,col])
+    time.series[19,col] <- ifelse(zeta[19,col] < chance.to.flip, 
+                                  !time.series[19,col],
+                                  time.series[19,col])
+    time.series[20,col] <- ifelse(zeta[20,col] < chance.to.flip, 
+                                  !time.series[20,col],
+                                  time.series[20,col])
+    time.series[21,col] <- ifelse(zeta[21,col] < chance.to.flip, 
+                                  !time.series[21,col],
+                                  time.series[21,col])
+    time.series[22,col] <- ifelse(zeta[22,col] < chance.to.flip, 
+                                  !time.series[22,col],
+                                  time.series[22,col])
+    time.series[23,col] <- ifelse(zeta[23,col] < chance.to.flip, 
+                                  !time.series[23,col],
+                                  time.series[23,col])
+    time.series[24,col] <- ifelse(zeta[24,col] < chance.to.flip, 
+                                  !time.series[24,col],
+                                  time.series[24,col])
   
 #now we add the personalized patient mutations
 #for (i in 1:nrow(patient_profile_test_df)){
@@ -255,14 +237,14 @@ rolling_median <- rollmedian(time.series$running_mean, k = window)
 #diagrams
 hist(time.series[window:n.obs,28],
      xlim = c(-8,2),
-     ylim = c(0, 8000),
+     ylim = c(0, 20000),
      main = "Histogram of running mean",
      xlab = "running mean"
 ) # plot the distribution of the running mean 
 
 hist(rolling_median,
      xlim = c(-5,-2),
-     ylim = c(0, 3000),
+     ylim = c(0, 20000),
      main = "Histogram of rolling median",
      xlab = "rolling median"
 ) # plot the distribution of the rolling median 
