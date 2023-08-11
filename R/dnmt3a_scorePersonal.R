@@ -20,13 +20,31 @@ patient_profile_df <- s7_df %>%
 
 #FOR NOW IM MAKING A TEST DATAFRAME
 #chooses the first 200 samples
-  patient_profile_test_df <- patient_profile_df[1:10, ]
+  patient_profile_test_df <- patient_profile_df[1:100, ]
 #chooses a random 200 samples of the dataframe
   #patient_profile_test_df <- patient_profile_df[sample(nrow(patient_profile_df), 200), ]
 
 #create the dictonary
 genes_values <- Dict$new(  
   FLT3 = "time.series[1,col] <- 1" ,
+  AKT = "time.series[2,col] <- 1}",	
+  CEBPA = "time.series[3,col] <- 0",
+  DNMT3A = "time.series[4,col] <- 0",
+  GSK3B = "time.series[5,col] <- 0",
+  NPM1 = "time.series[6,col] <- 0",
+  ARF = "time.series[7,col] <- 0",	   
+  HOXA9 = "time.series[8,col] <- 1",
+  FBXW7 = "time.series[9,col] <- 0", 
+  ERK = "time.series[10,col] <- 1",
+  CDKN2A = "time.series[11,col] <- 0",
+  STAT5A = "time.series[12,col] <- 1",
+  SOX4 = "time.series[13,col] <- 1",
+  CCND1 = "time.series[14,col] <- 1",
+  MEIS1 = "time.series[15,col] <- 1",
+  MYC = "time.series[16,col] <- 1",
+  ETV6 = "time.series[17,col] <- 0",
+  TP53 = "time.series[18,col] <- 0",
+  BCL2 = "time.series[19,col] <- 1",
   .class = "character",
   .overwrite = TRUE)
 
