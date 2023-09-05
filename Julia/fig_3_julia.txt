@@ -1,0 +1,139 @@
+#using Pkg
+#Pkg.add("DataFrames")
+#Pkg.add("Random")
+#Pkg.add("RollingFunctions")
+#Pkg.add("XLSX")
+#Pkg.add("Distributions") 
+
+using DataFrames
+using Random
+using RollingFunctions
+import XLSX
+using Distributions
+
+#this one has all the values (NOT USING RIGHT NOW)
+#s7_data_combined = XLSX.readxlsx("C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/s7_data_combined.xlsx")
+
+#this one has the first 20 rows only (it does not have headers)
+s7_data_combined = XLSX.readxlsx("C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/test_s7.xlsx")
+sh = s7_data_combined["Sheet1"]
+
+n_obs = 20000  # number of steps
+#n_half = div(n_obs, 2)  # half the steps (for plot making)
+p = 78  # number of variables
+chance_to_flip = 0.01 
+
+#example mutation_profile 
+mutation_profile = sh["B2"]
+
+#getting all the mutation profiles ONLY
+#mutation_profile = sh["B1:B20"]
+
+#gives you a row (this would be an individual node in our case) with n.obs
+#time_series[1,:]
+
+#creating the function for personal score  
+function score_personal(mutation_profile)
+    # Separate the values by commas
+    mutation_profile = split(mutation_profile, ',')
+    
+    # Remove repeated values
+    mutation_profile = unique(mutation_profile)
+    
+    println(mutation_profile)
+    println("preparing to create time series")
+    
+    # 78 time-series of noise for 78 variables  #integers not floats
+    zeta = rand(Uniform(0,1), p, n_obs)
+    
+	#creates an "empty" time series  #integers not floats
+    time_series = zeros(Int, p, n_obs)
+    
+    # Initial value of the variables were randomly chosen to be 0.0 or 1.0 
+    time_series[:, 1] = rand(0:1, p)
+	
+	#can't seem to change the 0 to FALSE or the 1 into TRUE in Julia but is it necesaary when values are randomly selected o or 1?
+			
+    for col in 2:n_obs
+        # Simulate each time step based on the previous time step and Boolean functions
+        time_series[1, col] = time_series[1, col - 1]  # KITLG = KITLG
+        time_series[2, col] = time_series[2, col - 1]  # FLT3LG = FLT3LG
+        time_series[3, col] = time_series[6, col - 1] & time_series[11, col - 1] & time_series[10, col - 1]  # GRB2 = BCR_ABL | FLT3 | KIT
+        time_series[4, col] = time_series[4, col - 1]  # KDM5A = KDM5A
+        time_series[5, col] = !(time_series[4, col - 1]) & time_series[5, col - 1]  # PTEN = !KDM5A & PTEN
+		
+		
+        time_series[6, col] = !time_series[5, col - 1]  # BCR_ABL = !PTEN
+        time_series[7, col] = time_series[7, col - 1]  # CBLB = CBLB
+        time_series[8, col] = time_series[3, col - 1]  # CBL = GRB2
+        time_series[9, col] = time_series[3, col - 1]  # SOS1 = GRB2
+        time_series[10, col] = !(time_series[8, col - 1] | time_series[7, col - 1]) & (time_series[16, col - 1] | time_series[1, col - 1])  # KIT = !(CBL | CBLB) & (AML1_ETO | KITLG)
+        time_series[11, col] = !(time_series[8, col - 1] | time_series[7, col - 1]) & time_series[2, col - 1]  # FLT3 = !(CBL | CBLB ) & FLT3LG
+        time_series[12, col] = time_series[12, col - 1]  # CDK1 = CDK1
+        time_series[13, col] = time_series[13, col - 1]  # STAG2 = STAG2 
+        time_series[14, col] = time_series[14, col - 1]  # SH2B3 = SH2B3
+        time_series[15, col] = !time_series[11, col - 1]  # PTPN6 =!FLT3
+        time_series[16, col] = time_series[16, col - 1]  # AML1_ETO = AML1_ETO
+        time_series[17, col] = time_series[17, col - 1]  # PML_RARalpha = PML_RARalpha
+        time_series[18, col] = time_series[11, col - 1] & time_series[10, col - 1]  # PTPN11 = FLT3 | KIT
+        time_series[19, col] = !time_series[12, col - 1]  # CUX1 =!CDK1
+        time_series[20, col] = time_series[13, col - 1]  # RAD21 = STAG2
+        time_series[21, col] = !time_series[14, col - 1] & time_series[29, col - 1]  # BCL2L1 = !SH2B3 & STAT5A
+        time_series[22, col] = !(time_series[16, col - 1] & time_series[23, col - 1])  # MLL = !(AML1_ETO & DNMT3A)
+        time_series[23, col] = time_series[23, col - 1]  # DNMT3A = DNMT3A
+        time_series[24, col] = !time_series[19, col - 1] & time_series[22, col - 1]  # WT1 =!CUX1 & MLL\
+		time_series[25,col] = !time_series[19,col - 1]	#PIK3IP1 =!CUX1
+		time_series[26,col] = time_series[9,col - 1] & time_series[18,col - 1]	#NRAS = SOS1 | PTPN11
+		time_series[27,col] = !time_series[20,col - 1] & time_series[17,col - 1] 	#GATA2 = !RAD21 & PML_RARalpha
+		time_series[28,col] = !time_series[21,col - 1] 	#BAX = !BCL2L1
+		time_series[29,col] = time_series[22,col - 1] & time_series[6,col - 1]	#STAT5A = JAK2 | BCR_ABL 
+		time_series[30,col] = !time_series[24,col - 1] 	#SOX4 = !CEBPA
+		time_series[31,col] = !(time_series[25,col - 1]) & (time_series[11,col - 1] | time_series[10,col - 1] | time_series[26,col - 1] | time_series[32,col - 1])	#PI3K = !PIK3IP1 & (FLT3 | KIT | NRAS | SPI1)
+		time_series[32,col] = !time_series[27,col - 1] & time_series[24,col - 1]	#SPI1 = !GATA2 & CEBPA
+		time_series[33,col] = time_series[29,col - 1] 	#PIM = STAT5A
+		time_series[34,col] = time_series[30,col - 1] & time_series[11,col - 1]	#CTNNB1 =  SOX4 | FLT3 
+		time_series[35,col] = time_series[31,col - 1] 	#AKT = PI3K 
+		time_series[36,col] = !time_series[32,col - 1] & time_series[27,col - 1]	#GATA1 = !SPI1 & GATA2
+		time_series[37,col] = time_series[37,col - 1] 	#NUP98_Fusion = NUP98_Fusion
+		time_series[38,col] = time_series[38,col - 1]  #MLL_Fusion = MLL_Fusion
+		time_series[39,col] = !time_series[35,col - 1]	#FOXO = !AKT
+		time_series[40,col] = time_series[35,col - 1] 	#EP300 = AKT
+		time_series[41,col] = !time_series[35,col - 1] & time_series[26,col - 1]	#BRAF = !AKT & NRAS
+		time_series[42,col] = time_series[36,col - 1]  	#CBFB = GATA1
+		time_series[43,col] = time_series[37,col - 1]	#CDK6 = NUP98_Fusion
+		time_series[44,col] = time_series[38,col - 1]	#MECOM = MLL_Fusion
+		time_series[45,col] = time_series[38,col - 1]	#CBFbeta_MYH11 = MLL_Fusion
+		time_series[46,col] = time_series[46,col - 1]	#NPM1 = NPM1
+		time_series[47,col] = time_series[39,col - 1]  	#IDH1 = FOXO
+		time_series[48,col] = time_series[48,col - 1]	#IDH2 = IDH2
+		time_series[49,col] = time_series[41,col - 1] 	#ERK = BRAF 
+		time_series[50,col] = !(time_series[38,col - 1] | time_series[45,col - 1] | time_series[20,col - 1]) & (time_series[11,col - 1] | time_series[43,col - 1] | time_series[42,col - 1] | time_series[50,col - 1])	#RUNX1 = !(MLL_Fusion | CBFbeta_MYH11 | RAD21) & (FLT3 | CDK6 | CBFB | RUNX1)
+		time_series[51,col] = time_series[45,col - 1]	#DOT1L = CBFbeta_MYH11
+		time_series[52,col] = time_series[46,col - 1]	#FBXW7 = NPM1
+		time_series[53,col] = time_series[53,col - 1]	#AMPK = AMPK 
+		time_series[54,col] = time_series[54,col - 1]	#ASXL2 = ASXL2
+		time_series[55,col] = time_series[47,col - 1] & time_series[48,col - 1]	#OXO2 = IDH1 | IDH2
+		time_series[56,col] = !time_series[49,col - 1] 	#ETV6 = !ERK
+		time_series[57,col] = time_series[49,col - 1] 	#AP1 = ERK 
+		time_series[58,col] = time_series[58,col - 1]	#DNMT3A = DNMT3A
+		time_series[59,col] = !time_series[35,col - 1]	#AEZH2 = !AKT
+		time_series[60,col] = time_series[60,col - 1]	#ASXL1 = ASXL1
+		time_series[61,col] = !(time_series[52,col - 1] | time_series[50,col - 1]) & (time_series[49,col - 1] | time_series[51,col - 1])	#MYC = !(FBXW7 | RUNX1) & (ERK | DOT1L)
+		time_series[62,col] = !time_series[53,col - 1] & !time_series[35,col - 1] 	#MTOR = !(AMPK | AKT)
+		time_series[63,col] = time_series[55,col - 1] | time_series[53,col - 1] | time_series[54,col - 1]	#TET2 = OXO2 | AMPK | ASXL2
+		time_series[64,col] = time_series[64,col - 1] 	#PHF6 = PHF6
+		time_series[65,col] = !time_series[58,col - 1] 	#CCND1 = !DNMT3A 
+		time_series[66,col] = !(time_series[59,col - 1] | time_series[58,col - 1] | time_series[60,col - 1]) & time_series[51,col - 1]		#HOXA9 = !(AEZH2 | DNMT3A | ASXL1) & DOT1L 
+		time_series[67,col] = !(time_series[58,col - 1] | time_series[61,col - 1] | time_series[16,col - 1]) & (time_series[60,col - 1]	| time_series[46,col - 1])	#CDKN2A = !( DNMT3A | MYC | AML1_ETO) & (ASXL1 | NPM1)
+		time_series[68,col] = time_series[68,col - 1] 	#SRSF2 = SRSF2
+		time_series[69,col] = time_series[63,col - 1]   #WT1 = TET2
+		time_series[70,col] = time_series[70,col - 1]	#BCOR = BCOR
+		time_series[71,col] = !time_series[64,col - 1]	#UBTF = !PHF6
+		time_series[72,col] = !time_series[58,col - 1] & (time_series[66,col - 1] | time_series[51,col - 1])	#MEIS1 =!DNMT3A & (HOXA9 | DOT1L)
+		time_series[73,col] = !time_series[67,col - 1] & (time_series[68,col - 1] | time_series[77,col - 1] | time_series[35,col - 1])	#MDM2 = !CDKN2A & (SRSF2 | TP53 | AKT)
+		time_series[74,col] = time_series[74,col - 1]	#U2AF1 = U2AF1
+		time_series[75,col] = time_series[75,col - 1]	#XPO1 = XPO1
+		time_series[76,col] = time_series[76,col - 1]	#CREBBP = CREBBP
+		time_series[77,col] = !(time_series[73,col - 1] | time_series[45,col - 1] | time_series[75,col - 1]) & (time_series[74,col - 1]) & time_series[76,col - 1]	#TP53 = !(MDM2 | CBFbeta_MYH11 | XPO1 | U2AF1) & (CREBBP)
+		time_series[78,col] = !time_series[77,col - 1] & (time_series[49,col - 1] | time_series[51,col - 1]) #BCL2 = !TP53 & (ERK | DOT1L)    
+        
