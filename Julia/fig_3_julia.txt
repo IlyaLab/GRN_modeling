@@ -12,16 +12,16 @@ import XLSX
 using Distributions
 
 #this one has all the values (NOT USING RIGHT NOW)
-#s7_data_combined = XLSX.readxlsx("C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/s7_data_combined.xlsx")
+#s7_data_combined = XLSX.readxlsx("C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/julia_test_s7.xlsx")
 
 #this one has the first 20 rows only (it does not have headers)
-s7_data_combined = XLSX.readxlsx("C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/test_s7.xlsx")
+s7_data_combined = XLSX.readxlsx("C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/julia_test_s7.xlsx")
 sh = s7_data_combined["Sheet1"]
 
 n_obs = 20000  # number of steps
 #n_half = div(n_obs, 2)  # half the steps (for plot making)
 p = 78  # number of variables
-chance_to_flip = 0.01 
+chance_to_flip = 0.01
 
 #example mutation_profile 
 mutation_profile = sh["B2"]
@@ -34,12 +34,15 @@ mutation_profile = sh["B2"]
 
 #creating the function for personal score  
 function score_personal(mutation_profile)
-    # Separate the values by commas
+	# Separate the values by commas
     mutation_profile = split(mutation_profile, ',')
     
     # Remove repeated values
     mutation_profile = unique(mutation_profile)
-    
+	
+	# Join back together 
+	join(mutation_profile, ",")
+
     println(mutation_profile)
     println("preparing to create time series")
     
@@ -53,16 +56,14 @@ function score_personal(mutation_profile)
     time_series[:, 1] = rand(0:1, p)
 	
 	#can't seem to change the 0 to FALSE or the 1 into TRUE in Julia but is it necesaary when values are randomly selected o or 1?
-			
+	
     for col in 2:n_obs
         # Simulate each time step based on the previous time step and Boolean functions
         time_series[1, col] = time_series[1, col - 1]  # KITLG = KITLG
         time_series[2, col] = time_series[2, col - 1]  # FLT3LG = FLT3LG
         time_series[3, col] = time_series[6, col - 1] & time_series[11, col - 1] & time_series[10, col - 1]  # GRB2 = BCR_ABL | FLT3 | KIT
         time_series[4, col] = time_series[4, col - 1]  # KDM5A = KDM5A
-        time_series[5, col] = !(time_series[4, col - 1]) & time_series[5, col - 1]  # PTEN = !KDM5A & PTEN
-		
-		
+        time_series[5, col] = !(time_series[4, col - 1]) & time_series[5, col - 1]  # PTEN = !KDM5A & PTEN 		
         time_series[6, col] = !time_series[5, col - 1]  # BCR_ABL = !PTEN
         time_series[7, col] = time_series[7, col - 1]  # CBLB = CBLB
         time_series[8, col] = time_series[3, col - 1]  # CBL = GRB2
@@ -135,5 +136,15 @@ function score_personal(mutation_profile)
 		time_series[75,col] = time_series[75,col - 1]	#XPO1 = XPO1
 		time_series[76,col] = time_series[76,col - 1]	#CREBBP = CREBBP
 		time_series[77,col] = !(time_series[73,col - 1] | time_series[45,col - 1] | time_series[75,col - 1]) & (time_series[74,col - 1]) & time_series[76,col - 1]	#TP53 = !(MDM2 | CBFbeta_MYH11 | XPO1 | U2AF1) & (CREBBP)
-		time_series[78,col] = !time_series[77,col - 1] & (time_series[49,col - 1] | time_series[51,col - 1]) #BCL2 = !TP53 & (ERK | DOT1L)    
+		time_series[78,col] = !time_series[77,col - 1] & (time_series[49,col - 1] | time_series[51,col - 1]) #BCL2 = !TP53 & (ERK | DOT1L)
+		
+		# apply random noise
+        noise = rand(p) .< chance_to_flip
+        time_series[:, col] .= xor.(time_series[:, col], noise)
+		
+		#knocking in/out genes 
+		if any(x -> occursin.("FLT3", x), mutation_profile)
+		time_series[11, col] = 1
+		end
+
         
