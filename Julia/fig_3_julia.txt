@@ -468,11 +468,15 @@ function score_personal(mutation_profile)
 	
 	println("time series is complete")
 	
+	#convert to dataframe
+	time_series= DataFrame(time_series, :auto) 
+	
 	### need to compute proliferation, differentiation, and apoptosis scores ###
+	
 	#network_scores is a 78x4 array that is empty
 	for i in 1:p #for every variable
 		#get the proliferation score
-		network_scores[i,1] = with(time.series, (-1 *CDKN2A) + (-1 * WT1) + (-1 * BCOR) + STAT5A + CTNNB1 + MYC + AP1 + CCNA1 + MEIS1 + CCND1 + UBTF)
+		network_scores[:,1] = 
 		
 		#computing the average scores from rolling mean
 		#rolling window of size n_obs/1000
