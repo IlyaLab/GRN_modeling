@@ -32,8 +32,7 @@ empty_series[:, 1] = rand(0:1, p) # Initial value of the variables were randomly
 empty_series[:, n_constant_nodes] = rand(0:1, p) # Initial value of the variables were randomly chosen to be 0.0 or 1.0 
 
 time_series = empty_series #saving the empty time series as the time series (so it can be regenerated later)
-
-network_scores= zeros(78,4) #saves a empty frame of 4 columns for proliferation, differentiation, and apoptosis, and the score
+network_scores = zeros(n_obs, 5)
 
 mutation_profile = sh["B2"] #example mutation_profile to see if function works 
 #mutation_profile = sh["B1:B20"] #getting all the mutation profiles ONLY
@@ -468,29 +467,63 @@ function score_personal(mutation_profile)
 	
 	println("time series is complete")
 	
-	#convert to dataframe
-	time_series= DataFrame(time_series, :auto) 
+	#computing the scores
+	for col in 1:n_obs
+		network_scores[col,1] = ((-1 * time_series[67,col]) + (-1 * time_series[69,col]) + (-1 * time_series[70,col]) + time_series[29,col] + time_series[34,col] + time_series[61,col] + time_series[57,col] + time_series[23,col] + time_series[72,col] + time_series[65,col] + time_series[71,col])
+		network_scores[col,2]= ((-1 * time_series[30,col]) + ( -1 * time_series[45,col]) + time_series[32,col] + time_series[50,col] + time_series[24,col] + time_series[56,col] + time_series[40,col])
+		network_scores[col,3] = ((-1 * time_series[78,col]) + (-1 * time_series[33,col]) + time_series[39,col] + time_series[77,col] + time_series[28,col])
+		network_scores[col,4] = (network_scores[col,1]) - ((network_scores[col,2]) + (network_scores[col,3]))
+	end 
 	
-	### need to compute proliferation, differentiation, and apoptosis scores ###
+	#computing the average scores from rolling mean
+	#rolling window of size n_obs/1000
+	window_size = div(n_obs, 1000)
 	
-	#network_scores is a 78x4 array that is empty
-	for i in 1:p #for every variable
-		#get the proliferation score
-		network_scores[:,1] = 
-		
-		#computing the average scores from rolling mean
-		#rolling window of size n_obs/1000
-		window_size = div(n_obs, 1000)
-		
-		#calculate the rolling average for each variable using the RollingFunctions package
-		rolling_avg = rollmean(time_series[i, :], window_size)
-		
-		#calculate the score for each variable as the sum of rolling average
-		score_series[i, :] .= rolling_avg
-		
-	end
+	#calculate the rolling average for each variable using the RollingFunctions package
+	rolling_avg = rollmean(network_scores[:,4], window_size)
 	
-	#Compute the average score over all simulations
-    final_score = mean(score_series, dims=1)
+	#Compute the final_score
+    final_score = mean(rolling_avg[n_constant_nodes:length(rolling_avg)], dims=1)
+	final_score = final_score[1]
+	final_score = round(final_score, sigdigits=3)
     
     return final_score
+end
+
+### using the function ###
+patient_matrix = zeros(20, 4)
+
+# id = patient_matrix[:,1]
+#scores = patient_matrix[:,2]
+# PB_Blast = patient_matrix[:,3]
+# BM_Blast = patient_matrix[:,4]
+
+counter <- 0
+
+
+
+
+
+for (i in 1:nrow(patient_profile_test_df)){
+  patient_id <- as.vector(patient_profile_test_df$labId[i])
+  mutation_profile <- as.vector(patient_profile_test_df$symbol[i])
+  
+  PB_score <- as.numeric(s5_df$'%.Blasts.in.PB'[i])
+  BM_score <- as.numeric(s5_df$'%.Blasts.in.BM'[i])
+  
+  #get the result score
+  result <- scorePersonal(mutation_profile)
+  
+  #save all info into vectors
+  scores <- c(scores, result)
+  id <- c(id, patient_id)
+  PB_Blast <- c(PB_Blast, PB_score)
+  BM_Blast <- c(BM_Blast, BM_score)
+  
+  PB_patient_df <- na.omit(data.frame(id,scores,PB_Blast))
+  BM_patient_df <- na.omit(data.frame(id,scores,BM_Blast))
+  
+  counter <- counter + 1
+  
+  print(paste0("point ", counter))
+}
