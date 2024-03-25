@@ -11,8 +11,8 @@ library(tidyr)
 library(writexl)
 
 #import the data
-s7_combined_df <- read_excel("C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/raw_data/s7_data_combined.xlsx", col_names = c("Patient_Id", "Symbol"))
-s5_df <- read_excel("C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/raw_data/s5_table.xlsx")
+s7_combined_df <- read_excel("/path/s7_data_combined.xlsx", col_names = c("Patient_Id", "Symbol"))
+s5_df <- read_excel("/path/s5_table.xlsx")
 
 colnames(s5_df)[1] ="Patient_Id"
 lab_ID_common <- intersect(s5_df$Patient_Id,s7_combined_df$Patient_Id)
@@ -104,5 +104,5 @@ wilcox_df$gene_name <- top_40_genes
 wilcox_df$PB_significant <- ifelse(wilcox_df$pval_PB < 0.05, "YES", "NO")
 wilcox_df$BM_significant <- ifelse(wilcox_df$pval_BM < 0.05, "YES", "NO")
 
-write_xlsx(wilcox_df,"C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/raw_data/wilcox_pvalue.xlsx", col_names = TRUE, format_headers = TRUE)
+write_xlsx(wilcox_df,"/path/wilcox_pvalue.xlsx", col_names = TRUE, format_headers = TRUE)
 
