@@ -13,8 +13,8 @@ library(ggrepel)
 library(readxl)
 
 #import the s5 and s7 dataframes
-s7_combined_df <- read_excel("C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/raw_data/s7_data_combined.xlsx", col_names = c('labId','symbol'))
-s5_df <- read_excel("C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/raw_data/s5_table.xlsx")
+s7_combined_df <- read_excel("/path/s7_data_combined.xlsx", col_names = c('labId','symbol'))
+s5_df <- read_excel("/path/s5_table.xlsx")
 
 #changing the colnames of s5_df and making them numeric
 colnames(s5_df)[2] = 'BM_Blast'
