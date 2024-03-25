@@ -13,7 +13,7 @@ library(ggrepel)
 #library(readxl)
 
 #importing the excel sheets 
-#s7_combined_df <- read_excel("C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/raw_data/s7_data_combined.xlsx")
+#s7_combined_df <- read_excel("/path/s7_data_combined.xlsx")
 #s5_df <- read_excel("(insert_path_to_excel_sheet)/s5_table.xlsx")
 
 #combine the table 7 rows into columns, so one row is equal to one patient 
