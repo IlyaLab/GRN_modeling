@@ -1,0 +1,511 @@
+### Created by Tazein Shah
+### Last modified on 10/4/2023
+### This code runs the whole AML network from fig 3 in the Palma paper in Julia 
+### Seperates constant nodes from rest 
+
+
+#using Pkg
+#Pkg.add("DataFrames")
+#Pkg.add("Random")
+#Pkg.add("RollingFunctions")
+#Pkg.add("XLSX")
+#Pkg.add("Distributions") 
+
+using DataFrames
+using Random
+using RollingFunctions
+import XLSX
+using Distributions
+
+### importing the dataframe ###
+#this one has all the values (NOT USING RIGHT NOW)
+#s7_data_combined = XLSX.readxlsx("C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/julia_test_s7.xlsx")
+
+#this one has the first 20 rows only (it does not have headers)
+s7_data_combined = XLSX.readxlsx("C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/julia_test_s7.xlsx")
+sh = s7_data_combined["Sheet1"]
+
+### setting the variables and constants ###
+
+n_obs = 20000  # number of steps
+n_constant_nodes = ((n_obs) - 5000)  # for the constant nodes (15000 steps)
+p = 78  # number of variables
+chance_to_flip = 0.01
+
+zeta = rand(Uniform(0,1), p, n_obs) #78 time-series of noise for 78 variables  #integers not floats
+empty_series = zeros(Int, p, n_obs) #creates an "empty" time series  #integers not floats
+empty_series[:, 1] = rand(0:1, p) # Initial value of the variables were randomly chosen to be 0.0 or 1.0 
+empty_series[:, n_constant_nodes] = rand(0:1, p) # Initial value of the variables were randomly chosen to be 0.0 or 1.0 
+
+time_series = empty_series #saving the empty time series as the time series (so it can be regenerated later)
+network_scores = zeros(n_obs, 5)
+
+mutation_profile = sh["B2"] #example mutation_profile to see if function works 
+#mutation_profile = sh["B1:B20"] #getting all the mutation profiles ONLY
+#time_series[1,:] #gives you a row (this would be an individual node in our case) with n.obs
+
+### score_personal function ###
+
+#creating the function for personal score  
+function score_personal(mutation_profile)
+	# Separate the values by commas
+    mutation_profile = split(mutation_profile, ',')
+    
+    # Remove repeated values
+    mutation_profile = unique(mutation_profile)
+	
+	# Join back together 
+	join(mutation_profile, ",")
+
+    println(mutation_profile)
+    println("preparing to create time series")
+    	
+    for col in (n_constant_nodes + 1) :n_obs
+		#simulate the constant nodes for only a couple of steps
+		time_series[1, col] = time_series[1, col - 1]  # KITLG = KITLG
+		time_series[2, col] = time_series[2, col - 1]  # FLT3LG = FLT3LG
+		time_series[4, col] = time_series[4, col - 1]  # KDM5A = KDM5A
+		time_series[7, col] = time_series[7, col - 1]  # CBLB = CBLB
+		time_series[12, col] = time_series[12, col - 1]  # CDK1 = CDK1
+		time_series[13, col] = time_series[13, col - 1]  # STAG2 = STAG2
+		time_series[14, col] = time_series[14, col - 1]  # SH2B3 = SH2B3
+		time_series[16, col] = time_series[16, col - 1]  # AML1_ETO = AML1_ETO
+		time_series[17, col] = time_series[17, col - 1]  # PML_RARalpha = PML_RARalpha
+		time_series[37, col] = time_series[37,col - 1] #NUP98_Fusion = NUP98_Fusion
+		time_series[38, col] = time_series[38,col - 1] #MLL_Fusion = MLL_Fusion
+		time_series[46, col] = time_series[46,col - 1] #NPM1 = NPM1
+		time_series[48, col] = time_series[48,col - 1] #IDH2 = IDH2
+		time_series[53, col] = time_series[53,col - 1]	#AMPK = AMPK
+		time_series[54, col] = time_series[54,col - 1] #ASXL2 = ASXL2
+		time_series[58, col] = time_series[58,col - 1]	#DNMT3A = DNMT3A
+		time_series[60, col] = time_series[60,col - 1]	#ASXL1 = ASXL1
+		time_series[64, col] = time_series[64,col - 1] #PHF6 = PHF6
+		time_series[68, col] = time_series[68,col - 1] #SRSF2 = SRSF2
+		time_series[70, col] = time_series[70,col - 1]	#BCOR = BCOR
+		time_series[74, col] = time_series[74,col - 1]	#U2AF1 = U2AF1
+		time_series[75, col] = time_series[75,col - 1]	#XPO1 = XPO1
+		time_series[76, col] = time_series[76,col - 1]	#CREBBP = CREBBP
+	end
+	
+	for col in 2:n_obs
+        # Simulate each time step based on the previous time step and Boolean functions
+        time_series[3, col] = time_series[6, col - 1] & time_series[11, col - 1] & time_series[10, col - 1]  # GRB2 = BCR_ABL | FLT3 | KIT
+		time_series[5, col] = abs((time_series[4, col - 1])-1) & time_series[5, col - 1]  # PTEN = !KDM5A & PTEN
+		time_series[6, col] = abs((time_series[5, col - 1])-1)  # BCR_ABL = !PTEN
+        time_series[8, col] = time_series[3, col - 1]  # CBL = GRB2
+        time_series[9, col] = time_series[3, col - 1]  # SOS1 = GRB2  	
+		time_series[10, col] = abs((time_series[8, col - 1])-1) & abs((time_series[7, col - 1])-1) & (time_series[16, col - 1] | time_series[1, col - 1])  # KIT = !(CBL | CBLB) & (AML1_ETO | KITLG)
+        time_series[11, col] = abs((time_series[8, col - 1])-1) & abs((time_series[7, col - 1])-1) & time_series[2, col - 1]  # FLT3 = !(CBL | CBLB ) & FLT3LG
+		time_series[15, col] = abs((time_series[11, col - 1])-1)  # PTPN6 =!FLT3
+		time_series[18, col] = time_series[11, col - 1] & time_series[10, col - 1]  # PTPN11 = FLT3 | KIT
+		time_series[19, col] = abs((time_series[12, col - 1])-1)  # CUX1 =!CDK1
+		time_series[20, col] = time_series[13, col - 1]  # RAD21 = STAG2
+		time_series[21, col] = abs((time_series[14, col - 1])-1) & time_series[29, col - 1]  # BCL2L1 = !SH2B3 & STAT5A
+		time_series[22, col] = abs((time_series[16,col - 1])-1) & abs((time_series[15,col - 1])-1) & abs((time_series[14,col - 1])-1) & (time_series[6,col - 1] | time_series[10,col - 1]) 	#JAK2 = !(AML1_ETO | PTPN6 | SH2B3) & (BCR_ABL | KIT)
+		time_series[23, col] = time_series[17,col - 1]	#CCNA1 = PML_RARalpha
+		time_series[24, col] = abs((time_series[16,col - 1])-1) & abs((time_series[11,col - 1])-1) & abs((time_series[17,col - 1])-1) #CEBPA =!(AML1_ETO | FLT3 | PML_RARalpha)
+		time_series[25, col] = abs((time_series[19,col - 1])-1)	#PIK3IP1 =!CUX1
+		time_series[26, col] = time_series[9,col - 1] & time_series[18,col - 1] #NRAS = SOS1 | PTPN11
+		time_series[27, col] = abs((time_series[20,col - 1])-1) & time_series[17,col - 1] #GATA2 = !RAD21 & PML_RARalpha
+		time_series[28, col] = abs((time_series[21,col - 1])-1)	#BAX = !BCL2L1
+		time_series[29, col] = time_series[22,col - 1] & time_series[6,col - 1]	#STAT5A = JAK2 | BCR_ABL
+		time_series[30, col] = abs((time_series[24,col - 1])-1) #SOX4 = !CEBPA
+		time_series[31, col] = abs((time_series[25,col - 1])-1) & (time_series[11,col - 1] | time_series[10,col - 1] | time_series[26,col - 1] | time_series[32,col - 1]) #PI3K = !PIK3IP1 & (FLT3 | KIT | NRAS | SPI1)
+		time_series[32, col] = abs((time_series[27,col - 1])-1) & time_series[24,col - 1]  #SPI1 = !GATA2 & CEBPA
+		time_series[33, col] = time_series[29,col - 1] #PIM = STAT5A
+		time_series[34, col] = time_series[30,col - 1] & time_series[11,col - 1] #CTNNB1 =  SOX4 | FLT3 
+		time_series[35, col] = time_series[31,col - 1] 	#AKT = PI3K 
+		time_series[36, col] = abs((time_series[32,col - 1])-1) & time_series[27,col - 1] #GATA1 = !SPI1 & GATA2
+		time_series[39, col] = abs((time_series[35,col - 1])-1) #FOXO = !AKT
+		time_series[40, col] = time_series[35,col - 1] #EP300 = AKT
+		time_series[41, col] = abs((time_series[35,col - 1])-1) & time_series[26,col - 1] #BRAF = !AKT & NRAS
+		time_series[42, col] = time_series[36,col - 1] #CBFB = GATA1
+		time_series[43, col] = time_series[37,col - 1] #CDK6 = NUP98_Fusion
+		time_series[44, col] = time_series[38,col - 1] #MECOM = MLL_Fusion
+		time_series[45, col] = time_series[38,col - 1] #CBFbeta_MYH11 = MLL_Fusion
+		time_series[47, col] = time_series[39,col - 1] #IDH1 = FOXO
+		time_series[49, col] = time_series[41,col - 1] #ERK1/2 = BRAF
+		time_series[50, col] = abs((time_series[38,col - 1])-1) & abs((time_series[45,col - 1])-1) & abs((time_series[20,col - 1])-1) & (time_series[11,col - 1] | time_series[43,col - 1] | time_series[42,col - 1] | time_series[50,col - 1])	#RUNX1 = !(MLL_Fusion | CBFbeta_MYH11 | RAD21) & (FLT3 | CDK6 | CBFB | RUNX1)
+		time_series[51, col] = time_series[45,col - 1] #DOT1L = CBFbeta_MYH11
+		time_series[52, col] = time_series[46,col - 1] #FBXW7 = NPM1
+		time_series[55, col] = time_series[47,col - 1] & time_series[48,col - 1] #OXO2 = IDH1 | IDH2
+		time_series[56, col] = abs((time_series[49,col - 1])-1) #ETV6 = !ERK1/2
+		time_series[57, col] = time_series[49,col - 1] #AP1 = ERK1/2
+		time_series[59, col] = abs((time_series[35,col - 1])-1) #AEZH2 = !AKT
+		time_series[61, col] = abs((time_series[52,col - 1])-1) & abs((time_series[50,col - 1])-1) & (time_series[49,col - 1] | time_series[51,col - 1]) #MYC = !(FBXW7 | RUNX1) & (ERK1/2 | DOT1L)
+		time_series[62, col] = abs((time_series[53,col - 1])-1) & abs((time_series[35,col - 1])-1) #MTOR = !(AMPK | AKT)
+		time_series[63, col] = time_series[55,col - 1] | time_series[53,col - 1] | time_series[54,col - 1]	#TET2 = OXO2 | AMPK | ASXL2
+		time_series[65, col] = abs((time_series[58,col - 1])-1) #CCND1 = !DNMT3A
+		time_series[66, col] = abs((time_series[59,col - 1])-1) & abs((time_series[58,col - 1])-1) & abs((time_series[60,col - 1])-1) & time_series[51,col - 1]	#HOXA9 = !(AEZH2 | DNMT3A | ASXL1) & DOT1L 
+		time_series[67, col] = abs((time_series[58,col - 1])-1) & abs((time_series[61,col - 1])-1) & abs((time_series[16,col - 1])-1) & (time_series[60,col - 1] | time_series[46,col - 1])	#CDKN2A = !( DNMT3A | MYC | AML1_ETO) & (ASXL1 | NPM1)
+		time_series[69, col] = time_series[63,col - 1] #WT1 = TET2
+		time_series[71, col] = abs((time_series[64,col - 1])-1) #UBTF = !PHF6
+		time_series[72, col] = abs((time_series[58,col - 1])-1) & (time_series[66,col - 1] | time_series[51,col - 1]) #MEIS1 =!DNMT3A & (HOXA9 | DOT1L)
+		time_series[73, col] = abs((time_series[67,col - 1])-1) & (time_series[68,col - 1] | time_series[77,col - 1] | time_series[35,col - 1]) #MDM2 = !CDKN2A & (SRSF2 | TP53 | AKT)
+		time_series[77, col] = abs((time_series[73,col - 1])-1) & abs((time_series[45,col - 1])-1) & abs((time_series[75,col - 1])-1) & abs((time_series[74,col - 1])-1) & time_series[76,col - 1] #TP53 = !(MDM2 | CBFbeta_MYH11 | XPO1 | U2AF1) & (CREBBP)
+		time_series[78, col] = abs((time_series[77,col - 1])-1) & (time_series[49,col - 1] | time_series[51,col - 1])	#BCL2 = !TP53 & (ERK1/2 | DOT1L) 
+		
+		#apply random noise
+		noise = rand(p) .< chance_to_flip
+		time_series[:, col] .= xor.(time_series[:, col], noise)
+		
+	end 
+	
+	#for the oncogenes
+	for col in 1:n_obs 
+		#knocking in genes
+		if any(x -> occursin.("KITLG", x), mutation_profile)
+		time_series[1,col] = 1
+		end
+		
+		if any(x -> occursin.("FLT3LG", x), mutation_profile)
+		time_series[2,col] = 1
+		end
+		
+		if any(x -> occursin.("GRB2", x), mutation_profile)
+		time_series[3,col] = 1
+		end
+		
+		if any(x -> occursin.("KDM5A", x), mutation_profile)
+		time_series[4,col] = 1
+		end
+		
+		if any(x -> occursin.("BCR_ABL", x), mutation_profile)
+		time_series[6,col] = 1
+		end
+		
+		if any(x -> occursin.("SOS1", x), mutation_profile)
+		time_series[9,col] = 1
+		end
+		
+		if any(x -> occursin.("KIT", x), mutation_profile)
+		time_series[10,col] = 1
+		end
+		
+		if any(x -> occursin.("FLT3", x), mutation_profile)
+		time_series[11,col] = 1
+		end
+		
+		if any(x -> occursin.("AML1_ETO", x), mutation_profile)
+		time_series[16,col] = 1
+		end
+		
+		if any(x -> occursin.("PML_RARalpha", x), mutation_profile)
+		time_series[17,col] = 1	  #check the lettering!
+		end
+		
+		if any(x -> occursin.("PTPN11", x), mutation_profile)
+		time_series[18,col] = 1
+		end
+		
+		if any(x -> occursin.("CUX1", x), mutation_profile)
+		time_series[19,col] = 1
+		end
+		
+		if any(x -> occursin.("RAD21", x), mutation_profile)
+		time_series[20,col] = 1
+		end
+		
+		if any(x -> occursin.("BCL2L1", x), mutation_profile)
+		time_series[21,col] = 1
+		end
+		
+		if any(x -> occursin.("JAK2", x), mutation_profile)
+		time_series[22,col] = 1
+		end
+		
+		if any(x -> occursin.("CCNA1", x), mutation_profile)
+		time_series[23,col] = 1
+		end
+		
+		if any(x -> occursin.("NRAS", x), mutation_profile)
+		time_series[26,col] = 1
+		end
+		
+		if any(x -> occursin.("GATA2", x), mutation_profile)
+		time_series[27,col] = 1
+		end
+		
+		if any(x -> occursin.("STAT5A", x), mutation_profile)
+		time_series[29,col] = 1
+		end
+		
+		if any(x -> occursin.("SOX4", x), mutation_profile)
+		time_series[30,col] = 1
+		end
+		
+		if any(x -> occursin.("PI3K", x), mutation_profile)
+		time_series[31,col] = 1
+		end
+		
+		if any(x -> occursin.("PIM", x), mutation_profile)
+		time_series[33,col] = 1
+		end
+		
+		if any(x -> occursin.("CTNNB1", x), mutation_profile)
+		time_series[34,col] = 1
+		end
+		
+		if any(x -> occursin.("AKT", x), mutation_profile)
+		time_series[35,col] = 1
+		end
+		
+		if any(x -> occursin.("GATA1", x), mutation_profile)
+		time_series[36,col] = 1
+		end
+		
+		if any(x -> occursin.("MLL_Fusion", x), mutation_profile)
+		time_series[38,col] = 1 #check the lettering!
+		end
+		
+		if any(x -> occursin.("BRAF", x), mutation_profile)
+		time_series[41,col] = 1
+		end
+		
+		if any(x -> occursin.("CDK6", x), mutation_profile)
+		time_series[43,col] = 1
+		end
+		
+		if any(x -> occursin.("MECOM", x), mutation_profile)
+		time_series[44,col] = 1
+		end
+		
+		if any(x -> occursin.("NPM1", x), mutation_profile)
+		time_series[46,col] = 1
+		end
+		
+		if any(x -> occursin.("IDH1", x), mutation_profile)
+		time_series[47,col] = 1
+		end
+		
+		if any(x -> occursin.("IDH2", x), mutation_profile)
+		time_series[48,col] = 1
+		end
+		
+		if any(x -> occursin.("ERK", x), mutation_profile)
+		time_series[49,col] = 1 #check the lettering!
+		end
+		
+		if any(x -> occursin.("DOT1L", x), mutation_profile)
+		time_series[51,col] = 1
+		end
+		
+		if any(x -> occursin.("AMPK", x), mutation_profile)
+		time_series[53,col] = 1	#check the value
+		end
+		
+		if any(x -> occursin.("OXO2", x), mutation_profile)
+		time_series[55,col] = 1 #check the value
+		end
+		
+		if any(x -> occursin.("AP1", x), mutation_profile)
+		time_series[57,col] = 1
+		end
+		
+		if any(x -> occursin.("MYC", x), mutation_profile)
+		time_series[61,col] = 1
+		end
+		
+		if any(x -> occursin.("MTOR", x), mutation_profile)
+		time_series[62,col] = 1 #check the value
+		end
+		
+		if any(x -> occursin.("CCND1", x), mutation_profile)
+		time_series[65,col] = 1
+		end
+		
+		if any(x -> occursin.("HOXA9", x), mutation_profile)
+		time_series[66,col] = 1
+		end
+		
+		if any(x -> occursin.("SRSF2", x), mutation_profile)
+		time_series[68,col] = 1 #check the value
+		end
+		
+		if any(x -> occursin.("UBTF", x), mutation_profile)
+		time_series[71,col] = 1
+		end
+		
+		if any(x -> occursin.("MEIS1", x), mutation_profile)
+		time_series[72,col] = 1
+		end
+		
+		if any(x -> occursin.("MDM2", x), mutation_profile)
+		time_series[73,col] = 1	#check the value
+		end
+		
+		if any(x -> occursin.("U2AF1", x), mutation_profile)
+		time_series[74,col] = 1
+		end
+		
+		if any(x -> occursin.("XPO1", x), mutation_profile)
+		time_series[75,col] = 1
+		end
+		
+		if any(x -> occursin.("BCL2", x), mutation_profile)
+		time_series[78,col] = 1
+		end
+	end
+	
+	#for the TSG
+	for col in 1:n_obs 
+		#knocking in genes
+		if any(x -> occursin.("PTEN", x), mutation_profile)
+		time_series[5,col] = 0
+		end
+		
+		if any(x -> occursin.("CBLB", x), mutation_profile)
+		time_series[7,col] = 0
+		end
+		
+		if any(x -> occursin.("CBL", x), mutation_profile)
+		time_series[8,col] = 0
+		end
+		
+		if any(x -> occursin.("CDK1", x), mutation_profile)
+		time_series[12,col] = 0
+		end
+		
+		if any(x -> occursin.("STAG2", x), mutation_profile)
+		time_series[13,col] = 0
+		end
+		
+		if any(x -> occursin.("SH2B3", x), mutation_profile)
+		time_series[14,col] = 0
+		end
+		
+		if any(x -> occursin.("PTPN6", x), mutation_profile)
+		time_series[15,col] = 0
+		end
+		
+		if any(x -> occursin.("CEBPA", x), mutation_profile)
+		time_series[24,col] = 0
+		end
+		
+		if any(x -> occursin.("PIK3IP1", x), mutation_profile)
+		time_series[25,col] = 0
+		end
+		
+		if any(x -> occursin.("BAX", x), mutation_profile)
+		time_series[28,col] = 0
+		end
+		
+		if any(x -> occursin.("SPI1", x), mutation_profile)
+		time_series[32,col] = 0
+		end
+		
+		if any(x -> occursin.("NUP98_Fusion", x), mutation_profile)
+		time_series[37,col] = 0 #check the lettering!
+		end
+		
+		if any(x -> occursin.("FOXO", x), mutation_profile)
+		time_series[39,col] = 0
+		end
+		
+		if any(x -> occursin.("EP300", x), mutation_profile)
+		time_series[40,col] = 0
+		end
+		
+		if any(x -> occursin.("CBFB", x), mutation_profile)
+		time_series[42,col] = 0
+		end
+		
+		if any(x -> occursin.("CBFbeta_MYH11", x), mutation_profile)
+		time_series[45,col] = 0 #check the lettering!
+		end
+		
+		if any(x -> occursin.("RUNX1", x), mutation_profile)
+		time_series[50,col] = 0
+		end
+		
+		if any(x -> occursin.("FBXW7", x), mutation_profile)
+		time_series[52,col] = 0
+		end
+		
+		if any(x -> occursin.("ASXL2", x), mutation_profile)
+		time_series[54,col] = 0
+		end
+		
+		if any(x -> occursin.("ETV6", x), mutation_profile)
+		time_series[56,col] = 0
+		end
+		
+		if any(x -> occursin.("DNMT3A", x), mutation_profile)
+		time_series[58,col] = 0
+		end
+		
+		if any(x -> occursin.("AEZH2", x), mutation_profile)
+		time_series[59,col] = 0
+		end
+		
+		if any(x -> occursin.("ASXL1", x), mutation_profile)
+		time_series[60,col] = 0
+		end
+		
+		if any(x -> occursin.("TET2", x), mutation_profile)
+		time_series[63,col] = 0
+		end
+		
+		if any(x -> occursin.("PHF6", x), mutation_profile)
+		time_series[64,col] = 0
+		end
+		
+		if any(x -> occursin.("CDKN2A", x), mutation_profile)
+		time_series[67,col] = 0
+		end
+		
+		if any(x -> occursin.("WT1", x), mutation_profile)
+		time_series[69,col] = 0
+		end
+		
+		if any(x -> occursin.("BCOR", x), mutation_profile)
+		time_series[70,col] = 0
+		end
+		
+		if any(x -> occursin.("CREBBP", x), mutation_profile)
+		time_series[76,col] = 0
+		end
+		
+		if any(x -> occursin.("TP53", x), mutation_profile)
+		time_series[77,col] = 0
+		end
+	end
+	
+	println("time series is complete")
+	
+	#computing the scores
+	for col in 1:n_obs
+		network_scores[col,1] = ((-1 * time_series[67,col]) + (-1 * time_series[69,col]) + (-1 * time_series[70,col]) + time_series[29,col] + time_series[34,col] + time_series[61,col] + time_series[57,col] + time_series[23,col] + time_series[72,col] + time_series[65,col] + time_series[71,col])
+		network_scores[col,2]= ((-1 * time_series[30,col]) + ( -1 * time_series[45,col]) + time_series[32,col] + time_series[50,col] + time_series[24,col] + time_series[56,col] + time_series[40,col])
+		network_scores[col,3] = ((-1 * time_series[78,col]) + (-1 * time_series[33,col]) + time_series[39,col] + time_series[77,col] + time_series[28,col])
+		network_scores[col,4] = (network_scores[col,1]) - ((network_scores[col,2]) + (network_scores[col,3]))
+	end 
+	
+	#computing the average scores from rolling mean
+	#rolling window of size n_obs/1000
+	window_size = div(n_obs, 1000)
+	
+	#calculate the rolling average for each variable using the RollingFunctions package
+	rolling_avg = rollmean(network_scores[:,4], window_size)
+	
+	#Compute the final_score
+    final_score = mean(rolling_avg[n_constant_nodes:length(rolling_avg)], dims=1)
+	final_score = final_score[1]
+	final_score = round(final_score, sigdigits=3)
+    
+    return final_score
+end
+
+### using the function ###
+patient_matrix = zeros(20, 1)
+
+for i in 1:(length(mutation_profile))
+	#get the result score
+	result = score_personal(mutation_profile[i]) 
+	println(result)
+	
+	patient_matrix[i,1] = result 
+	
+	time_series = empty_series
+end
+  

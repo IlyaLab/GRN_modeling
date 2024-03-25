@@ -1,0 +1,76 @@
+### Last modified on 10/29/2023
+### Supposed to be an R file (but I don't know why it's not)
+### This code runs an example time series with three variables, then gets the rolling mean and final score
+
+#load needed packages
+library(BoolNet)
+library(reshape2)
+library(dplyr)
+library(zoo)
+library(ggplot2)
+library(ggrepel)
+#library(writexl)
+#library(readxl)
+
+n.obs <- 100000 # number of observation aka steps 
+p <- 3 # number of variables
+
+#this is a threshold to flip the node 
+chance.to.flip <- 0.01
+
+### running the simulation ###
+
+  # 3 time-series of noise for 3 variables
+  zeta <- matrix(runif(n.obs * p, 0, 1), ncol = p)
+  
+  zeta <- t(zeta) # adjust zeta to a wide-format
+  
+  time.series <- matrix(rep(0, p * n.obs), nrow =p , ncol =  n.obs)
+  
+  time.series[,1] <- runif(p,0, 1) # initial value of the three variables were randomly chosen
+  
+  time.series[,1] <-ifelse(time.series[,1] >= .5, TRUE,FALSE) # if the randomly generated number is greater than .5, then we convert the value to TRUE, otherwise to FALSE
+  
+  for (col in 2:n.obs){
+    # simulate each time step based on the previous time step and Boolean functions
+    time.series[1,col] <-time.series[1,col-1] & time.series[2,col-1] #X= X(t-1) and Y(t-1)
+    time.series[2,col] <-time.series[1,col-1] | time.series[2,col-1] #Y= X(t-1) or Y(t-1)
+    time.series[3,col] <-time.series[1,col-1] | (!(time.series[2,col-1] & time.series[3,col-1])) #Z= X(t-1) or !(Y(t-1) and Z(t-1))
+ 
+    
+    #adding noise 
+    time.series[1,col] <- ifelse(zeta[1,col] < chance.to.flip, 
+                                 !time.series[1,col],
+                                 time.series[1,col] )
+    time.series[2,col] <- ifelse(zeta[2,col] < chance.to.flip, 
+                                 !time.series[2,col],
+                                 time.series[2,col] )
+    time.series[3,col] <- ifelse(zeta[3,col] < chance.to.flip, 
+                                 !time.series[3,col],
+                                 time.series[3,col])
+  }
+
+  #making it readable 
+  time.series <- t(time.series)
+  time.series <- data.frame(time.series)
+  colnames(time.series) <- c("X", "Y", "Z")
+  
+### making the diagrams ###
+  
+  hist(rolling_median,
+   xlim = c(-5,-2),
+   ylim = c(0, 20000),
+   main = "Histogram of rolling median",
+   xlab = "rolling median"
+) # plot the distribution of the rolling median 
+
+#plot(seq(1,n.obs), time.series$running_mean[upper_bound:lower_bound], xlab = "time points", ylab = "running mean")
+
+#getting the relative error points to check if the score converges
+#s1 <- mean(time.series$Score[500:1000])  #for 1000
+#s2 <- mean(time.series$Score[500:2000])  #for 2000
+#s3 <- mean(time.series$Score[500:4000])  #for 4000
+#s4 <- mean(time.series$Score[500:8000])  #for 8000
+#s5 <- mean(time.series$Score[500:16000]) #for 16000
+#s6 <- mean(time.series$Score[500:32000]) #for 32000
+#s7 <- mean(time.series$Score[500:64000]) #for 64000
