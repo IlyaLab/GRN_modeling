@@ -1,0 +1,42 @@
+#Import the data from textfile and name signor
+
+#singling out the genes involved with prolif, diff, and apop
+network_df <- signor[signor$ENTITYB == "Proliferation" | signor$ENTITYB == "Differentiation" | signor$ENTITYB == "Apoptosis",]
+
+#genes for every group of the gsva 
+
+#prolif_up
+prolif_up <- network_df[network_df$ENTITYB == "Proliferation" & network_df$EFFECT == "up-regulates",]
+prolif_up <- c(prolif_up$ENTITYA)
+cat(paste(shQuote(prolif_up), collapse = ','), '\n')
+#result: "STAT5A","CTNNB1","STAT5A","CTNNB1","MYC","AP1","CCNA1","MTOR","MEIS1","CCND1","MTOR","PML-RARalpha","PI3K","MEN1","STAT5A","STAT3","STAT3","UBTF","SOX4","CCND1" 
+
+#prolif_down
+prolif_down <- network_df[network_df$ENTITYB == "Proliferation" & network_df$EFFECT == "down-regulates",]
+prolif_down <- c(prolif_down$ENTITYA)
+cat(paste(shQuote(prolif_down), collapse = ','), '\n')
+#result: "TP53","CDKN2A","WT1","TET2","BCOR","FOXO","ZBTB16","BAD" 
+
+#diff_up
+diff_up <- network_df[network_df$ENTITYB == "Differentiation" & network_df$EFFECT == "up-regulates",]
+diff_up <- c(diff_up$ENTITYA)
+cat(paste(shQuote(diff_up), collapse = ','), '\n')
+#result: "SPI1","DNMT3A","EP300","RUNX1","CEBPA","ETV6","NOTCH1" 
+
+#diff_down
+diff_down <- network_df[network_df$ENTITYB == "Differentiation" & network_df$EFFECT == "down-regulates",]
+diff_down <- c(diff_down$ENTITYA)
+cat(paste(shQuote(diff_down), collapse = ','), '\n')
+#result: "SOX4","HOXA9","MEIS1","CBFbeta-MYH11","BCOR" 
+
+#apop_up 
+apop_up <- network_df[network_df$ENTITYB == "Apoptosis" & network_df$EFFECT == "up-regulates",]
+apop_up <- c(apop_up$ENTITYA)
+cat(paste(shQuote(apop_up), collapse = ','), '\n')
+#result: "FOXO","TP53","BAK1","BAX","BAD","ZBTB16" 
+ 
+#apop_down
+apop_down <- network_df[network_df$ENTITYB == "Apoptosis" & network_df$EFFECT == "down-regulates",]
+apop_down <- c(apop_down$ENTITYA)
+cat(paste(shQuote(apop_down), collapse = ','), '\n')
+#result: "BCL2","MEIS1","PIM","STAT5A","BCL2L1","PARP1" 
