@@ -19,10 +19,10 @@ using Distributions
 
 ### importing the dataframe ###
 #this one has all the values (NOT USING RIGHT NOW)
-#s7_data_combined = XLSX.readxlsx("C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/julia_test_s7.xlsx")
+#s7_data_combined = XLSX.readxlsx("/path/julia_test_s7.xlsx")
 
 #this one has the first 20 rows only (it does not have headers)
-s7_data_combined = XLSX.readxlsx("C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/julia_test_s7.xlsx")
+s7_data_combined = XLSX.readxlsx("/path/julia_test_s7.xlsx")
 sh = s7_data_combined["Sheet1"]
 
 ### setting the variables and constants ###
