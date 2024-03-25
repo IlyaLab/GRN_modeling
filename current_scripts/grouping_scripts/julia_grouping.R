@@ -11,8 +11,8 @@ library(ggsci)
 library(ggrepel) 
 library(readxl)
 
-julia_scores <- read_excel("C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/raw_data/julia_patient_scores.xlsx") #has all the scores
-s5_df <- read_excel("C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/raw_data/s5_table.xlsx") #has the BM and PB Blast % 
+julia_scores <- read_excel("/path/julia_patient_scores.xlsx") #has all the scores
+s5_df <- read_excel("/path/s5_table.xlsx") #has the BM and PB Blast % 
 
 #renaming both patient_id columns into labId
 colnames(julia_scores)[colnames(julia_scores) == "Patient_Id"] ="labId"
