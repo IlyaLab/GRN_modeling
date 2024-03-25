@@ -8,6 +8,8 @@ library(ggplot2)
 
 #import the data
 julia_scores <- read_excel("/path/julia_patient_scores.xlsx")
+
+##this file was from Guangrong Qin (too large to put into GitHub)
 ssGSEA_scores <- read_excel("/path/matrix_factor_beatAML.xlsx")
 colnames(ssGSEA_scores)[1] ="Patient_Id"
 
