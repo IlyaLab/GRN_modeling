@@ -7,8 +7,8 @@ library(readxl)
 library(ggplot2)
 
 #import the data
-julia_scores <- read_excel("C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/raw_data/julia_patient_scores.xlsx")
-ssGSEA_scores <- read_excel("C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/raw_data/matrix_factor_beatAML.xlsx")
+julia_scores <- read_excel("/path/julia_patient_scores.xlsx")
+ssGSEA_scores <- read_excel("/path/matrix_factor_beatAML.xlsx")
 colnames(ssGSEA_scores)[1] ="Patient_Id"
 
 #they don't have the same number of samples, so I need to get the samples they have in common
