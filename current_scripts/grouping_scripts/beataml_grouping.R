@@ -14,8 +14,8 @@ library(writexl)
 library(data.table)
 
 #import the data
-s7_combined_df <- read_excel("C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/raw_data/s7_data_combined.xlsx", col_names = c("Patient_Id", "Symbol"))
-s5_df <- read_excel("C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/raw_data/s5_table.xlsx")
+s7_combined_df <- read_excel("/path/s7_data_combined.xlsx", col_names = c("Patient_Id", "Symbol"))
+s5_df <- read_excel("/path/s5_table.xlsx")
 
 colnames(s5_df)[1] ="Patient_Id"
 lab_ID_common <- intersect(s5_df$Patient_Id,s7_combined_df$Patient_Id)
