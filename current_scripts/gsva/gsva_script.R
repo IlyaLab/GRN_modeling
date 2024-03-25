@@ -8,7 +8,7 @@ library(GSVA)
 library(ggplot2)
 
 #importing the excel sheet (CPM)
-s8_original_df <- read_excel("C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/raw_data/s8_table.xlsx")
+s8_original_df <- read_excel("/path/s8_table.xlsx")
 s8_df <- s8_original_df[,!names(s8_original_df) %in% c("Gene", "Symbol")]
 
 #fix dataframe to convert to matrix
@@ -76,7 +76,7 @@ data_network$apop_total <- (data_network$apop_up_network - data_network$apop_dow
 data_network$network_score <- data_network$prolif_total - ((data_network$diff_total) + (data_network$apop_total))
 
 #importing the clinical data from table 5
-s5_df <- read_excel("C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/raw_data/s5_table.xlsx")
+s5_df <- read_excel("/path/s5_table.xlsx")
 
 #adding the data from table 5 to the gsva results
 samples <- rownames(data)
