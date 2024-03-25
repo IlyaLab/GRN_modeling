@@ -1,0 +1,90 @@
+#### mutation type for all genes ####
+#for genes with '#not on CGN' the values were determined based on the figure 3 BNM 
+#and their hypotheical value, so they are not 100 percent accurate
+
+#KITLG= 1  #not on CGN
+#FLT3LG= 1 #not on CGN
+GRB2= 1	  
+KDM5A= 1	  
+PTEN= 0 
+#BCR_ABL= 1   #not on CGN 
+CBLB= 0   
+CBL= 0  #mixed opinion
+#SOS1= 1  #not on CGN  
+KIT= 1		
+FLT3= 1	 
+CDK1= 0
+STAG2= 0
+SH2B3= 0
+PTPN6= 0  
+#AML1_ETO= 1  #not on CGN  		  
+#PML_RARalpha= 1  #not on CGN 
+PTPN11= 1
+CUX1= 1   #mixed opinion
+RAD21= 0 #not on CGN
+BCL2L1= 1 
+JAK2= 1 #mixed opinion
+#CCNA1= 1  #not on CGN	  
+CEBPA= 0
+#PIK3IP1= 0	 #not on CGN
+NRAS= 1 
+GATA2= 1
+BAX= 0
+#STAT5A= 1 #not on CGN
+#SOX4=	1	#not on CGN
+PI3K= 1	 
+#SPI1= 0 #not on CGN
+PIM= 1   #mixed opinion
+CTNNB1= 1 #mixed opinion
+AKT= 1 
+GATA1= 1   #mixed opinion
+#NUP98_Fusion= 0	   #not on CGN	
+MLL_Fusion= 1	  #seems to be a fusion of a couple of genes
+FOXO= 0 #mixed opinion	  
+EP300= 0   	
+BRAF= 1
+CBFB= 0  
+CDK6= 1
+MECOM= 1
+#CBFbeta_MYH11= 0	  #not on CGN
+NPM1= 1	 
+IDH1= 1
+IDH2= 1
+ERK1/2= 1   #can also be called MAPK1
+RUNX1= 0	 #mixed opinion
+#DOT1L= 1	 #not on CGN   	  
+FBXW7= 0
+#AMPK= 1	#not on CGN  
+ASXL2= 0 
+#OXO2= 1  #not on CGN 
+ETV6= 0
+AP1= 1 #also called JUN
+DNMT3A= 0
+#AEZH2=	0  #not on CGN
+ASXL1= 0
+MYC= 1   
+MTOR= 1
+TET2= 0  
+PHF6= 0
+CCND1= 1   	
+HOXA9= 1	#mixed opinion  
+CDKN2A=	0
+SRSF2= 1 
+WT1= 0 	#mixed opinion
+BCOR= 0
+#UBTF= 1  #not on CGN
+#MEIS1=	1  #not on CGN		  
+MDM2= 1 
+U2AF1= 1	
+XPO1= 1   
+CREBBP= 0 #mixed opinion
+TP53= 0  #mixed opinion
+BCL2= 1
+#GSK3B = 1  #not on CGN
+MAP2K2 = 1 #mixed opinion
+NFKB2 = 1 #mixed opinion
+
+
+
+
+  
