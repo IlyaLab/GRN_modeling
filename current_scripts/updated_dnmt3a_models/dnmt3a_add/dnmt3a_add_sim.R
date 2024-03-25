@@ -14,8 +14,8 @@ library(writexl)
 library(readxl)
 
 #importing the excel sheets 
-s7_df <- read_excel("C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/raw_data/s7_table.xlsx")
-s5_df <- read_excel("C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/raw_data/s5_table.xlsx")
+s7_df <- read_excel("/path/s7_table.xlsx")
+s5_df <- read_excel("/path/s5_table.xlsx")
 
 patient_profile_df <- s7_df %>%
   dplyr::group_by(labId) %>%
@@ -277,14 +277,14 @@ scores_df <- scores_df %>% mutate_at(c('Final_Score', 'Apoptosis','Differentiati
 
 #saving as excel sheet
 #write_xlsx(
-#scores_df,"C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/raw_data/dnmt3a_add.xlsx",
+#scores_df,"/path/dnmt3a_add.xlsx",
 #col_names = TRUE,
 #format_headers = TRUE)
 
 ############# making the scatterplots  #############
 
 #load the file from excel sheet
-dnmt3a_add <- read_excel("C:/Users/15167/OneDrive/Documents/ISB/AML-DT-BNM/raw_data/dnmt3a_add.xlsx")
+dnmt3a_add <- read_excel("/path/dnmt3a_add.xlsx")
 dnmt3a_add <- na.omit(dnmt3a_add)
 
 ### proliferation ###
